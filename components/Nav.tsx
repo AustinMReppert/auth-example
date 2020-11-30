@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { FC } from 'react';
-import styled from 'styled-components';
+import Link from "next/link";
+import { FC } from "react";
+import styled from "styled-components";
 
 interface NavProps {}
 
@@ -46,6 +46,9 @@ const Nav: FC<NavProps> = (props: NavProps) => {
           </Link>
           <Link href="/login">
             <A>Login</A>
+          </Link>
+          <Link href="/register">
+            <A>Register</A>
           </Link>
         </div>
       </NavBar>

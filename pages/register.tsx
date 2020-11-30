@@ -2,9 +2,9 @@ import React from "react";
 import Layout from "../components/Layout";
 import styled from "styled-components";
 
-interface LoginProps {}
+interface RegisterProps {}
 
-interface LoginState {
+interface RegisterState {
   username: string;
   password: string;
 }
@@ -26,11 +26,11 @@ const Input = styled.input`
   margin: 1em;
 `;
 
-class Login extends React.Component<LoginProps, LoginState> {
+class Login extends React.Component<RegisterProps, RegisterState> {
   usernameRef: React.RefObject<HTMLInputElement>;
 
-  constructor(loginProps: LoginProps) {
-    super(loginProps);
+  constructor(registerProps: RegisterProps) {
+    super(registerProps);
     this.state = { username: "", password: "" };
     this.usernameRef = React.createRef<HTMLInputElement>();
   }
@@ -50,9 +50,9 @@ class Login extends React.Component<LoginProps, LoginState> {
 
   render() {
     return (
-      <Layout title="Login">
-        <Form method="POST" action="/api/login">
-          <H1>Login</H1>
+      <Layout title="Register">
+        <Form method="POST" action="/api/register">
+          <H1>Register</H1>
           <Input
             type="username"
             name="username"
@@ -68,7 +68,7 @@ class Login extends React.Component<LoginProps, LoginState> {
             value={this.state.password}
             onChange={this.onPasswordChange}
           />
-          <Input type="submit" name="submit" value="Login" />
+          <Input type="submit" name="submit" value="Register" />
         </Form>
       </Layout>
     );
