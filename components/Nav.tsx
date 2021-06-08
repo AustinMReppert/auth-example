@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { FC } from "react";
 import styled from "styled-components";
+import ProtectedLink from "./ProtectedLink";
+import { Authenticated } from "../utils/authenticate";
 
-interface NavProps {}
+interface NavProps extends Authenticated {}
 
 const A = styled.a`
   display: inline-block;
@@ -41,15 +43,26 @@ const Nav: FC<NavProps> = (props: NavProps) => {
           </Link>
         </div>
         <div>
-          <Link href="/">
-            <A>Home</A>
-          </Link>
-          <Link href="/login">
-            <A>Login</A>
-          </Link>
-          <Link href="/register">
-            <A>Register</A>
-          </Link>
+          <ProtectedLink authenticated={props.authenticated}>
+            <Link href="/profile">
+              <A>Profile</A>
+            </Link>
+          </ProtectedLink>
+          <ProtectedLink authenticated={!props.authenticated}>
+            <Link href="/register">
+              <A>Register</A>
+            </Link>
+          </ProtectedLink>
+          <ProtectedLink authenticated={!props.authenticated}>
+            <Link href="/login">
+              <A>Login</A>
+            </Link>
+          </ProtectedLink>
+          <ProtectedLink authenticated={props.authenticated}>
+            <Link href="/logout">
+              <A>Logout</A>
+            </Link>
+          </ProtectedLink>
         </div>
       </NavBar>
     </Header>

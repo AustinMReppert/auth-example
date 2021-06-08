@@ -1,9 +1,10 @@
-import { FC, ReactNode } from 'react';
-import Head from 'next/head';
-import Nav from './Nav';
-import styled from 'styled-components';
+import { FC, ReactNode } from "react";
+import Head from "next/head";
+import Nav from "./Nav";
+import styled from "styled-components";
+import { Authenticated } from "../utils/authenticate";
 
-interface LayoutProps {
+interface LayoutProps extends Authenticated {
   title: string;
   children: ReactNode;
 }
@@ -18,7 +19,7 @@ const Layout: FC<LayoutProps> = (props: LayoutProps) => {
       <Head>
         <title>{props.title}</title>
       </Head>
-      <Nav />
+      <Nav authenticated={props.authenticated} />
       <Main>{props.children}</Main>
     </>
   );

@@ -8,9 +8,9 @@ import requireAuthentication from "../middleware/requireAuthentication";
 import authenticate, { Authenticated } from "../utils/authenticate";
 import isAuthenticated from "../utils/authenticate";
 
-interface RegisterProps extends Authenticated {}
+interface LogoutProps extends Authenticated {}
 
-interface RegisterState {
+interface LogoutState {
   username: string;
   password: string;
 }
@@ -32,11 +32,11 @@ const Input = styled.input`
   margin: 1em;
 `;
 
-class Login extends React.Component<RegisterProps, RegisterState> {
+class Logout extends React.Component<LogoutProps, LogoutState> {
   usernameRef: React.RefObject<HTMLInputElement>;
 
-  constructor(registerProps: RegisterProps) {
-    super(registerProps);
+  constructor(logoutProps: LogoutProps) {
+    super(logoutProps);
     this.state = { username: "", password: "" };
     this.usernameRef = React.createRef<HTMLInputElement>();
   }
@@ -56,34 +56,23 @@ class Login extends React.Component<RegisterProps, RegisterState> {
 
   render() {
     return (
-      <Layout title="Register" authenticated={this.props.authenticated}>
-        <Form method="POST" action="/api/register">
-          <H1>Register</H1>
-          <Input
-            type="username"
-            name="username"
-            placeholder="username"
-            value={this.state.username}
-            onChange={this.onUsernameChange}
-            ref={this.usernameRef}
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="password"
-            value={this.state.password}
-            onChange={this.onPasswordChange}
-          />
-          <Input type="submit" name="submit" value="Register" />
+      <Layout title="Logout" authenticated={this.props.authenticated}>
+        <Form method="POST" action="/api/logout">
+          <H1>Logout</H1>
+          <Input type="submit" name="submit" value="Logout" />
         </Form>
       </Layout>
     );
   }
 }
 
-export async function getServerSideProps(context: GetServerSidePropsContext): Promise<{ props: RegisterProps }> {
-  const handler = nc().use(session).use(requireAuthentication(false));
-  await handler.run(context.req, context.res);
+export async function getServerSideProps(context: GetServerSidePropsContext): Promise<{ props: Authenticated }> {
+  const handler = nc().use(session).use(requireAuthentication(true));
+  try {
+    await handler.run(context.req, context.res);
+  } catch (e) {
+    console.log(e);
+  }
   return {
     props: {
       authenticated: isAuthenticated(context.req),
@@ -91,4 +80,4 @@ export async function getServerSideProps(context: GetServerSidePropsContext): Pr
   };
 }
 
-export default Login;
+export default Logout;

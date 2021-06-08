@@ -1,50 +1,67 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from "next";
+import nc, { NextHandler } from "next-connect";
+import session from "../../middleware/session";
+import hashPass from "../../middleware/hashPass";
 import { Client, QueryResult } from "pg";
+import requireAuthentication from "../../middleware/requireAuthentication";
 
-import bcrypt from "bcrypt";
-
-export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> => {
-  return new Promise<void>((resolve) => {
-    if (req.body.username && req.body.password) {
-      let username: string = req.body.username;
-      let password: string = req.body.password;
-
-      bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS as string), (err: Error, salt: string) => {
-        if (err) {
-          res.statusCode = 501;
-          res.json({ status: "Error on server." });
-          return resolve();
-        } else {
-          bcrypt.hash(password, salt, (err: Error, hash: string) => {
-            if (err) {
-              res.statusCode = 501;
-              res.json({ status: "Error on server." });
-              return resolve();
-            } else {
-              const client: Client = new Client();
-              client.connect();
-              client.query(
-                "insert into users(username, password) values ('" + username + "', '" + hash + "')",
-                (err: Error, queryResult: QueryResult) => {
-                  if (err) {
-                    res.statusCode = 501;
-                    res.json({ status: "Error on server." });
-                    return resolve();
-                  } else {
-                    res.statusCode = 200;
-                    res.json({ status: "Ok." });
-                    return resolve();
-                  }
-                },
-              );
-            }
-          });
-        }
-      });
-    } else {
-      res.statusCode = 400;
-      res.json({ status: "Bad Request." });
-      return resolve();
+const handler = nc<NextApiRequest, NextApiResponse>()
+  .use(session)
+  .use(requireAuthentication(false))
+  .use(hashPass)
+  .post((req: NextApiRequest, res) => {
+    if (req.session.userUUID) {
+      res.redirect("/logout");
+      return;
     }
+
+    let username: string = req.body.username;
+    let password: string = req.body.password;
+
+    if (!username || !password) {
+      res.status(400).json({ status: "Bad request." });
+      return;
+    }
+
+    const client: Client = new Client();
+    let statusCode: number = -1;
+    let status: string = "";
+    client.connect((err: Error) => {
+      if (err) {
+        res.status(500).json({ status: "Error on server." });
+        return;
+      } else {
+        client.query(
+          'insert into "user"(username, password) values ($1, $2) returning id',
+          [username, password],
+          (err: Error, queryResult: QueryResult) => {
+            if (err) {
+              if ((err as Error & { code: string }).code === "23505") {
+                statusCode = 409;
+                status = "Username already taken.";
+              } else {
+                statusCode = 500;
+                status = "Error on server.";
+              }
+            } else {
+              req.session.userUUID = queryResult.rows[0].id;
+            }
+            client.end((err: Error) => {
+              if (err) {
+                statusCode = 500;
+                status = "Error on server.";
+              } else if (statusCode == -1) {
+                statusCode = 200;
+                status = "Ok.";
+                res.redirect("/profile");
+                return;
+              }
+              res.status(statusCode).json({ status: status });
+            });
+          },
+        );
+      }
+    });
   });
-};
+
+export default handler;

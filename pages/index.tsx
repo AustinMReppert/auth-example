@@ -1,8 +1,12 @@
-import Layout from '../components/Layout';
-import { FC } from 'react';
-import styled from 'styled-components';
+import Layout from "../components/Layout";
+import { FC } from "react";
+import styled from "styled-components";
+import { GetServerSidePropsContext } from "next";
+import nc from "next-connect";
+import session from "../middleware/session";
+import isAuthenticated, { Authenticated } from "../utils/authenticate";
 
-interface HomeProps {}
+interface HomeProps extends Authenticated {}
 
 const Center = styled.section`
   display: flex;
@@ -16,7 +20,7 @@ const Center = styled.section`
 const Home: FC<HomeProps> = (props: HomeProps) => {
   return (
     <>
-      <Layout title="Home">
+      <Layout title="Home" authenticated={props.authenticated}>
         <Center>
           <article>Auth Demo</article>
         </Center>
@@ -24,5 +28,15 @@ const Home: FC<HomeProps> = (props: HomeProps) => {
     </>
   );
 };
+
+export async function getServerSideProps(context: GetServerSidePropsContext): Promise<{ props: Authenticated }> {
+  const handler = nc().use(session);
+  await handler.run(context.req, context.res);
+  return {
+    props: {
+      authenticated: isAuthenticated(context.req),
+    },
+  };
+}
 
 export default Home;

@@ -1,8 +1,13 @@
 import React from "react";
 import Layout from "../components/Layout";
 import styled from "styled-components";
+import { GetServerSidePropsContext } from "next";
+import nc from "next-connect";
+import session from "../middleware/session";
+import requireAuthentication from "../middleware/requireAuthentication";
+import isAuthenticated, { Authenticated } from "../utils/authenticate";
 
-interface LoginProps {}
+interface LoginProps extends Authenticated {}
 
 interface LoginState {
   username: string;
@@ -50,7 +55,7 @@ class Login extends React.Component<LoginProps, LoginState> {
 
   render() {
     return (
-      <Layout title="Login">
+      <Layout title="Login" authenticated={this.props.authenticated}>
         <Form method="POST" action="/api/login">
           <H1>Login</H1>
           <Input
@@ -73,6 +78,16 @@ class Login extends React.Component<LoginProps, LoginState> {
       </Layout>
     );
   }
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext): Promise<{ props: Authenticated }> {
+  const handler = nc().use(session).use(requireAuthentication(false));
+  await handler.run(context.req, context.res);
+  return {
+    props: {
+      authenticated: isAuthenticated(context.req),
+    },
+  };
 }
 
 export default Login;
